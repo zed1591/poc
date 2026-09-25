@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>CORS PoC</title>
-</head>
+<head><title>CORS Redirect Check</title></head>
 <body>
-    <h1>CORS Test Page</h1>
-    <pre id="output">Loading...</pre>
-
-    <script>
-const base = 'https://cewrs-scrap-api.aii.et';
-const paths = ['/api/health', '/api/status', '/api/me', '/api/user', '/api/config']; // Add more
+<h1>CORS Redirect Check</h1>
+<pre id="output"></pre>
+<script>
+const target = 'https://cewrs-scrap-api.aii.et/api/me';
 const out = document.getElementById('output');
 
 (async () => {
-  for (const p of paths) {
-    try {
-      const r = await fetch(base + p, { credentials: 'include' });
-      const t = await r.text();
-      // Only print if it's not a 404
-      if (r.status !== 404) {
-        out.textContent += `[${r.status}] ${p}\n${t}\n\n`;
-      }
-    } catch (e) {
-      out.textContent += `[ERR] ${p} — ${e.message}\n\n`;
-    }
+  // Test 1: follow redirects, see final URL
+  try {
+    const r = await fetch(target, { credentials: 'include', redirect: 'follow' });
+    out.textContent += `[follow] status=${r.status}\n`;
+    out.textContent += `[follow] final URL=${r.url}\n`;
+    out.textContent += `[follow] redirected=${r.redirected}\n\n`;
+    const body = await r.text();
+    out.textContent += body.slice(0, 500) + '\n\n';
+  } catch (e) {
+    out.textContent += `[follow] ERROR: ${e.message}\n\n`;
   }
-  if (!out.textContent) out.textContent = 'No non-404 endpoints found.';
+
+  // Test 2: block redirects, see raw response
+  try {
+    const r = await fetch(target, { credentials: 'include', redirect: 'manual' });
+    out.textContent += `[manual] type=${r.type} status=${r.status}\n`;
+    out.textContent += `[manual] URL=${r.url}\n`;
+    // opaque response — body not readable, but status and URL tell you a lot
+  } catch (e) {
+    out.textContent += `[manual] ERROR: ${e.message}\n\n`;
+  }
 })();
 </script>
 </body>
